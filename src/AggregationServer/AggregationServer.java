@@ -12,14 +12,12 @@ public class AggregationServer {
         String line;
 
         if(requestedData.equals("/")){
-            System.out.println("Test");
             while((line = data.readLine()) != null){
                 out.println(line);
             }
-
+            out.println("-1");
         }
-
-
+        data.close();
     }
 
     public static void main(String[] args){

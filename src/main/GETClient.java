@@ -54,8 +54,10 @@ public class GETClient {
             out.println(httpGetRequest); //sending GET Request to Aggregation Server
             String output;
             while((output = in.readLine()) != null) {
+                if(output.trim().equals("-1")){break;}
                 System.out.println(output); //currently printing information received from server
             }
+
         }
         catch(UnknownHostException e){
             System.err.println("Unknown host " + hostName);
