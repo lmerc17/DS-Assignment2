@@ -1,13 +1,26 @@
-package main;
+package AggregationServer;
 
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.io.PrintWriter;
-import java.io.BufferedReader;
-import java.io.IOException;
 
 public class AggregationServer {
+
+    public static void print_data(String requestedData, PrintWriter out) throws IOException{
+
+        BufferedReader data = new BufferedReader(new FileReader("AggregationServer/data.txt"));
+        String line;
+
+        if(requestedData.equals("/")){
+            System.out.println("Test");
+            while((line = data.readLine()) != null){
+                out.println(line);
+            }
+
+        }
+
+
+    }
 
     public static void main(String[] args){
 
@@ -40,9 +53,19 @@ public class AggregationServer {
         {
             System.out.println("Client connected on port " + port);
             String inputLine;
+            String requestedData;
             while((inputLine = in.readLine()) != null){
-                System.out.println("Received message: " + inputLine + " from " + clientSocket);
-                out.println(inputLine);
+
+                if(inputLine.startsWith("GET")){
+
+                    //delete GET and HTTP/1.0 from start and end of string to isolate requested Data
+                    requestedData = (inputLine.substring(3, inputLine.length() - 9)).trim();
+                    System.out.println("Received message: " + inputLine + " from " + clientSocket);
+
+                    print_data(requestedData, out);
+
+                }
+
             }
         }
         catch(IOException e){
