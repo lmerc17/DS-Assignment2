@@ -10,9 +10,14 @@ import java.util.regex.PatternSyntaxException;
 
 public class GETClient {
     public static void main(String[] args){
+        String path = "/";
+
         if(args.length > 2){
             System.err.println("Usage: java GETClient <url> <station ID>");
             System.exit(1);
+        }
+        else if(args.length == 2){
+            path = args[1];
         }
 
         String hostName = null;
@@ -36,18 +41,14 @@ public class GETClient {
             System.exit(1);
         }
 
-
-        try (Socket clientSocket = new Socket(hostName, portNumber);
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader((new InputStreamReader(clientSocket.getInputStream())));
-             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in))
+        try (Socket serverSocket = new Socket(hostName, portNumber);
+             PrintWriter out = new PrintWriter(serverSocket.getOutputStream(), true);
+             BufferedReader in = new BufferedReader((new InputStreamReader(serverSocket.getInputStream())))
         )
         {
-            String userInput;
-            while((userInput = stdIn.readLine()) != null){
-                out.println(userInput);
-                System.out.println("echo: " + in.readLine());
-            }
+            String httpGetRequest = "GET " + path + " HTTP/1.0";
+            out.println(httpGetRequest);
+            System.out.println("echo: " + in.readLine());
         }
         catch(UnknownHostException e){
             System.err.println("Unknown host " + hostName);
