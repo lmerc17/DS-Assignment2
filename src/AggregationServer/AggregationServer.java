@@ -8,7 +8,7 @@ public class AggregationServer {
 
     public static void print_data(String requestedData, PrintWriter out) throws IOException{
 
-        BufferedReader data = new BufferedReader(new FileReader("AggregationServer/data.txt"));
+        BufferedReader data = new BufferedReader(new FileReader("AggregationServer/weather.json"));
         String line;
 
         if(requestedData.equals("/")){

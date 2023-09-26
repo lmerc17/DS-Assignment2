@@ -1,4 +1,4 @@
-package main;
+package GETClient;
 
 import java.io.InputStreamReader;
 import java.net.Socket;
@@ -49,7 +49,7 @@ public class GETClient {
         //try and catch statement to ensure arg 0 of input is properly split and the port number is valid
         try{
             if(args[0].split(":").length != 2){ //if the first argument doesn't split into two components
-                System.err.print("Please enter correct url format: <hostname>:<port number>");
+                System.err.println("Please enter correct url format: <hostname>:<port number>");
                 System.exit(1);
             }
             hostName = args[0].split(":")[0];
