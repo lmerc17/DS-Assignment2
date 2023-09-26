@@ -9,6 +9,28 @@ import java.net.UnknownHostException;
 import java.util.regex.PatternSyntaxException;
 
 public class GETClient {
+
+    public static String parseJson(String JsonLine){ //method to parse the JSON formatting given by the aggregation server
+
+        JsonLine = JsonLine.trim(); //whitespace is trimmed from the input string.
+        boolean colon = false; //boolean is used to ensure only the first colon (:) is given a space after it
+
+        StringBuilder output = new StringBuilder(); //string builder initialised to create output string
+
+        for(char c : JsonLine.toCharArray()){ //for each character in the Json line
+            if(c == ':' && !colon){ //if it is a colon and the first one hasn't been formatted
+                output.append(": "); //add it and a space to the output string builder
+                colon = true; //set the colon flag to true
+            }
+            else if(c != '"' && c != ',' && c != ' '){ //if the character is not '"', ',' or ' ' add it to the string builder
+                output.append(c);
+            }
+        }
+
+        return output.toString(); //return the string builder in string form
+
+    }
+
     public static void main(String[] args){
         //Definition of stationID and hostname strings as well as port number integer
         String stationID = "/";
@@ -52,18 +74,27 @@ public class GETClient {
             String httpGetRequest = "GET " + stationID + " HTTP/1.0";
 
             out.println(httpGetRequest); //sending GET Request to Aggregation Server
-            String output;
-            while((output = in.readLine()) != null) {
-                if(output.trim().equals("-1")){break;}
-                System.out.println(output); //currently printing information received from server
+            
+            String receivedLine;
+            label:
+            while((receivedLine = in.readLine()) != null) { //while receiving lines from the server
+                switch (receivedLine.trim()) { //trim the line
+                    case "-1": //if it is -1, break the while loop
+                        break label;
+                    case "}", "{": //if it is { or }, print a new line (this is to separate different weather stations)
+                        System.out.println("\n");
+                        break;
+                    default: //when no cases are matched, take the receivedLine and print the parsed version of it
+                        System.out.println(parseJson(receivedLine));
+                }
             }
 
         }
-        catch(UnknownHostException e){
+        catch(UnknownHostException e){ //Exception catching for unknown host
             System.err.println("Unknown host " + hostName);
             System.exit(1);
         }
-        catch(IOException e){
+        catch(IOException e){ //Exception catching for IOException
             System.err.println("Couldn't get IO for connection to " + hostName);
             System.exit(1);
         }
