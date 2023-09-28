@@ -131,7 +131,7 @@ public class ContentServer {
                     counter++;
                 }
 
-                TimeUnit.SECONDS.sleep(5);
+                TimeUnit.SECONDS.sleep(25);
 
             }
 
