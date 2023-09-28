@@ -72,21 +72,34 @@ public class GETClient {
         {
             //creation of HTTP GET Request to be sent to Aggregation Server
             String httpGetRequest = "GET " + stationID + " HTTP/1.0";
-
-            out.println(httpGetRequest); //sending GET Request to Aggregation Server
-            
+            String status = "400"; //status string is created and set to 400
             String receivedLine;
-            label:
-            while((receivedLine = in.readLine()) != null) { //while receiving lines from the server
-                switch (receivedLine.trim()) { //trim the line
-                    case "-1": //if it is -1, break the while loop
-                        break label;
-                    case "}", "{": //if it is { or }, print a new line (this is to separate different weather stations)
-                        System.out.println("\n");
-                        break;
-                    default: //when no cases are matched, take the receivedLine and print the parsed version of it
-                        System.out.println(parseJson(receivedLine));
+            int counter = 0;
+
+
+            //while loop that checks server acknowledgement values
+            while((!(status.equals("200")))){
+                if(counter == 3){System.err.println("Three GET attempts in a row have failed, stopping client"); System.exit(1); break;}
+
+                out.println(httpGetRequest); //sending GET Request to Aggregation Server
+
+                receivedLine = in.readLine(); //reading in first line from server, this should be the acknowledgement
+                status = receivedLine.substring(9,12);
+
+
+                label:
+                while((receivedLine = in.readLine()) != null) { //while receiving lines from the server
+                    switch (receivedLine.trim()) { //trim the line
+                        case "-1": //if it is -1, break the while loop
+                            break label;
+                        case "}", "{": //if it is { or }, print a new line (this is to separate different weather stations)
+                            System.out.println("\n");
+                            break;
+                        default: //when no cases are matched, take the receivedLine and print the parsed version of it
+                            System.out.println(parseJson(receivedLine));
+                    }
                 }
+                counter++;
             }
 
         }
