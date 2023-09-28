@@ -104,9 +104,9 @@ public class ContentServer {
         {
             String httpPutRequest;
             String receivedLine;
-            String status = "400";
-            int content_length = 0;
-            int counter = 0;
+            String status;
+            int content_length;
+            int counter;
 
             for(int i=0; i<5; i++){
 
