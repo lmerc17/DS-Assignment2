@@ -6,6 +6,22 @@ import java.net.Socket;
 
 public class AggregationServer {
 
+    private static void send_acknowledgement(String status, String content_length, PrintWriter out){
+
+        String response;
+
+        if(content_length.equals("0")){
+            response = "HTTP/1.1 " + status;
+        }
+        else {
+            response = "HTTP/1.1 " + status + "\nContent-Type: text/json" + "\nContent-Length: " + content_length;
+        }
+
+        out.println(response);
+        out.println("-1");
+
+    }
+
     private static void save_data(String jsonData) throws IOException{
 
         File intermediate = new File("AggregationServer/intermediate_weather.json");
@@ -75,12 +91,15 @@ public class AggregationServer {
             System.out.println("Client connected on port " + port);
             String inputLine;
             String requestedData;
+            String destinationFile;
+            String content_length;
             while((inputLine = in.readLine()) != null){
 
                 if(inputLine.startsWith("GET")){
 
                     //delete GET and HTTP/1.1 from start and end of string to isolate requested Data
                     requestedData = (inputLine.substring(3, inputLine.length() - 9)).trim();
+                    send_acknowledgement("200 OK", "0", out);
                     System.out.println("Received message: " + inputLine + " from " + clientSocket);
 
                     print_data(requestedData, out);
@@ -89,6 +108,14 @@ public class AggregationServer {
                 else if(inputLine.startsWith("PUT")){
 
                     System.out.println(inputLine);
+                    destinationFile = (inputLine.substring(3, inputLine.length() - 9)).trim();
+
+                    while((inputLine = in.readLine()) != null){
+                        if(inputLine.startsWith("Content-Length")){break;}
+                    }
+
+                    content_length = inputLine != null ? inputLine.substring(16) : "0";
+                    send_acknowledgement("201 HTTP_CREATED", content_length, out);
 
 
                 }

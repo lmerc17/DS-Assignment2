@@ -4,15 +4,17 @@ import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.regex.PatternSyntaxException;
+import java.util.concurrent.TimeUnit;
 
 public class ContentServer {
 
     private static String createJSON(String fileName) throws IOException{
 
         //create the proper path for the fileName
-        fileName = "AggregationServer/" + fileName;
+        fileName = "ContentServer/" + fileName;
+        System.out.println(fileName);
 
-        boolean colon = false;
+        boolean colon;
 
         StringBuilder jsonData = new StringBuilder(); //create string builder for final jsonData
         BufferedReader weatherData = new BufferedReader(new FileReader(fileName)); //create buffered reader to read file
@@ -20,6 +22,7 @@ public class ContentServer {
 
         jsonData.append("{\n"); //insert the original { with a new line
         while((line = weatherData.readLine()) != null){ //while there is still a weatherData line to read
+            colon = false;
             jsonData.append("\t\""); //add a tab and a " to the line
             for(char c : line.toCharArray()) {
                 if(c == ':' && !colon){ //if the read character is a colon and this if statement hasn't been entered already for this line
@@ -99,18 +102,39 @@ public class ContentServer {
              BufferedReader in = new BufferedReader((new InputStreamReader(serverSocket.getInputStream())))
         )
         {
-            String httpPutRequest = createPUTRequest(jsonWeatherData);
-            System.out.println(httpPutRequest);
-            out.println(httpPutRequest); //sending PUT Request to Aggregation Server
-
-            //code to receive acknowledgement from server
+            String httpPutRequest;
             String receivedLine;
+            String status = "400";
+            int content_length = 0;
+            int counter = 0;
 
-            if((receivedLine = in.readLine()) != null) {
-                System.out.println(receivedLine);
+            for(int i=0; i<5; i++){
+
+                status = "400";
+                content_length = 0;
+                counter = 0;
+
+                //while loop with condition that checks values from server acknowledgement
+                while((!(status.equals("201"))) && (!(status.equals("200"))) || content_length != jsonWeatherData.getBytes().length){
+                    if(counter == 2){System.err.println("Two PUT attempts in a row have failed, stopping content server"); System.exit(1); break;}
+
+                    httpPutRequest = createPUTRequest(jsonWeatherData);
+                    out.println(httpPutRequest); //sending PUT Request to Aggregation Server
+
+                    //code to receive acknowledgement from server
+                    while((receivedLine = in.readLine()) != null) {
+                        if(receivedLine.equals("-1")){break;}
+                        if(receivedLine.startsWith("HTTP/1.1")){status = receivedLine.substring(9,12);}
+                        if(receivedLine.startsWith("Content-Length")){content_length = Integer.parseInt(receivedLine.substring(16,19));}
+                    }
+
+                    counter++;
+                }
+
+                TimeUnit.SECONDS.sleep(5);
+
             }
 
-            //need to check this acknowledgement (check response code and maybe payload)
 
         }
         catch(UnknownHostException e){ //Exception catching for unknown host
@@ -119,6 +143,10 @@ public class ContentServer {
         }
         catch(IOException e){ //Exception catching for IOException
             System.err.println("Couldn't get IO for connection to " + hostName);
+            System.exit(1);
+        }
+        catch(InterruptedException e){
+            System.err.println("Interrupted Exception");
             System.exit(1);
         }
 
