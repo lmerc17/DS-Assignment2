@@ -87,6 +87,7 @@ public class ContentServer {
             System.exit(1);
         }
 
+        //try and catch statement to ensure the jsonWeatherData is created
         String jsonWeatherData = null;
         try{
             jsonWeatherData = createJSON(dataPath);
@@ -102,21 +103,23 @@ public class ContentServer {
              BufferedReader in = new BufferedReader((new InputStreamReader(serverSocket.getInputStream())))
         )
         {
+            //defining used variables
             String httpPutRequest;
             String receivedLine;
             String status;
             int content_length;
             int counter;
 
-            for(int i=0; i<5; i++){
 
-                status = "400";
-                content_length = 0;
-                counter = 0;
+            for(int i=0; i<5; i++){ // for loop for sending PUT request to server, total runtime: 125 seconds
+
+                status = "400"; //resetting status with default value 400
+                content_length = 0; //setting content_length to 0
+                counter = 0; //setting counter to 0
 
                 //while loop with condition that checks values from server acknowledgement
                 while((!(status.equals("201"))) && (!(status.equals("200"))) || content_length != jsonWeatherData.getBytes().length){
-                    if(counter == 2){System.err.println("Two PUT attempts in a row have failed, stopping content server"); System.exit(1); break;}
+                    if(counter == 3){System.err.println("Three PUT attempts in a row have failed, stopping content server"); System.exit(1); break;}
 
                     httpPutRequest = createPUTRequest(jsonWeatherData);
                     out.println(httpPutRequest); //sending PUT Request to Aggregation Server
@@ -145,7 +148,7 @@ public class ContentServer {
             System.err.println("Couldn't get IO for connection to " + hostName);
             System.exit(1);
         }
-        catch(InterruptedException e){
+        catch(InterruptedException e){ //Exception for interrupted exception
             System.err.println("Interrupted Exception");
             System.exit(1);
         }
