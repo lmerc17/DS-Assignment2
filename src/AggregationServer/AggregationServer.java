@@ -6,7 +6,19 @@ import java.net.Socket;
 
 public class AggregationServer {
 
-    public static void print_data(String requestedData, PrintWriter out) throws IOException{
+    private static void save_data(String jsonData) throws IOException{
+
+        File intermediate = new File("AggregationServer/intermediate_weather.json");
+
+        if(intermediate.exists()) {
+            intermediate.delete();
+        }
+
+        intermediate.createNewFile();
+
+    }
+
+    private static void print_data(String requestedData, PrintWriter out) throws IOException{
 
         BufferedReader data = new BufferedReader(new FileReader("AggregationServer/weather.json"));
         String line;
@@ -16,6 +28,17 @@ public class AggregationServer {
                 out.println(line);
             }
             out.println("-1");
+        }
+        else{
+            while((line = data.readLine()) != null){
+                if(line.contains(requestedData)){
+                    while(((line = data.readLine()) != null) && !(line.trim().equals("}"))){
+                        out.println(line);
+                    }
+                    out.println("}");
+                    out.println("-1");
+                }
+            }
         }
         data.close();
     }
@@ -56,11 +79,17 @@ public class AggregationServer {
 
                 if(inputLine.startsWith("GET")){
 
-                    //delete GET and HTTP/1.0 from start and end of string to isolate requested Data
+                    //delete GET and HTTP/1.1 from start and end of string to isolate requested Data
                     requestedData = (inputLine.substring(3, inputLine.length() - 9)).trim();
                     System.out.println("Received message: " + inputLine + " from " + clientSocket);
 
                     print_data(requestedData, out);
+
+                }
+                else if(inputLine.startsWith("PUT")){
+
+                    System.out.println(inputLine);
+
 
                 }
 

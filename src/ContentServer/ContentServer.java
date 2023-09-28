@@ -7,35 +7,35 @@ import java.util.regex.PatternSyntaxException;
 
 public class ContentServer {
 
-    //EDIT THE BELOW METHOD TO ENSURE IT CAN SUPPORT MULTIPLE ENTRIES!!!!!!!!!!!!!
     private static String createJSON(String fileName) throws IOException{
 
+        //create the proper path for the fileName
         fileName = "AggregationServer/" + fileName;
 
         boolean colon = false;
 
-        StringBuilder jsonData = new StringBuilder();
-        BufferedReader weatherData = new BufferedReader(new FileReader(fileName));
+        StringBuilder jsonData = new StringBuilder(); //create string builder for final jsonData
+        BufferedReader weatherData = new BufferedReader(new FileReader(fileName)); //create buffered reader to read file
         String line;
 
-        jsonData.append("{\n");
-        while((line = weatherData.readLine()) != null){
-            jsonData.append("\t\"");
+        jsonData.append("{\n"); //insert the original { with a new line
+        while((line = weatherData.readLine()) != null){ //while there is still a weatherData line to read
+            jsonData.append("\t\""); //add a tab and a " to the line
             for(char c : line.toCharArray()) {
-                if(c == ':' && !colon){
-                    jsonData.append("\" : \"");
-                    colon = true;
+                if(c == ':' && !colon){ //if the read character is a colon and this if statement hasn't been entered already for this line
+                    jsonData.append("\" : \""); //add " : " to the line
+                    colon = true; //set flag to true
                 }
                 else{
-                    jsonData.append(c);
+                    jsonData.append(c); //otherwise append the character to the line as normal
                 }
             }
-            jsonData.append("\",\n");
+            jsonData.append("\",\n"); //once a line is complete add a final ", comma and newline
         }
-        jsonData.append("}");
+        jsonData.append("}"); //when the file is done add a final } symbol
         weatherData.close();
 
-        return jsonData.toString();
+        return jsonData.toString(); //return the new string of jsonData
 
     }
 
@@ -100,9 +100,16 @@ public class ContentServer {
         )
         {
             String httpPutRequest = createPUTRequest(jsonWeatherData);
+            System.out.println(httpPutRequest);
             out.println(httpPutRequest); //sending PUT Request to Aggregation Server
 
-            //need to receive acknowledgement from the server
+            //code to receive acknowledgement from server
+            String receivedLine;
+
+            if((receivedLine = in.readLine()) != null) {
+                System.out.println(receivedLine);
+            }
+
             //need to check this acknowledgement (check response code and maybe payload)
 
         }
