@@ -23,10 +23,13 @@ public class GETClient {
 
         for(char c : JsonLine.toCharArray()){ //for each character in the Json line
             if(c == ':' && !colon){ //if it is a colon and the first one hasn't been formatted
-                output.append(": "); //add it and a space to the output string builder
+                output.append(":"); //add it and a space to the output string builder
                 colon = true; //set the colon flag to true
             }
             else if(c != '"' && c != ',' && c != ' '){ //if the character is not '"', ',' or ' ' add it to the string builder
+                output.append(c);
+            }
+            else if(c == ' ' && colon){
                 output.append(c);
             }
         }
