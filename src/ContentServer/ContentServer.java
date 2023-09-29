@@ -15,7 +15,6 @@ public class ContentServer {
 
         //create the proper path for the fileName
         fileName = "ContentServer/" + fileName;
-        System.out.println(fileName);
 
         StringBuilder jsonData = new StringBuilder(); //create string builder for final jsonData
         BufferedReader weatherData = new BufferedReader(new FileReader(fileName)); //create buffered reader to read file
@@ -116,7 +115,7 @@ public class ContentServer {
         try{
             jsonWeatherData = createJSON(dataPath);
         }
-        catch(IOException e){
+        catch(IOException | ArrayIndexOutOfBoundsException e){
             System.err.println("Could not create JSON file from local weather data");
             System.exit(1);
         }
