@@ -3,6 +3,7 @@ package AggregationServer;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
 
 public class AggregationServer {
 
@@ -22,26 +23,13 @@ public class AggregationServer {
 
     }
 
-    private static void save_data(String jsonData) throws IOException{
+    private static void save_data(String jsonData, String destinationFile) throws IOException{
 
-        File intermediate = new File("AggregationServer/intermediate_weather.json");
+        // initialJsonWeatherData and newJsonWeatherData files are created.
+        File initialJsonWeatherData = new File("AggregationServer/weather_backup.json");
+        File newJsonWeatherData = new File("AggregationServer/" + destinationFile);
 
-        if(intermediate.exists()) {
-            if(!intermediate.delete()){
-                System.err.println("Cannot delete intermediate weather storage file");
-                System.exit(1);
-            }
-        }
-
-        if(!intermediate.createNewFile()){
-            System.err.println("Cannot create intermediate weather storage file");
-            System.exit(1);
-        }
-
-        try (FileWriter fw = new FileWriter("AggregationServer/intermediate_weather.json")) {
-            fw.write(jsonData);
-        }
-
+        Files.copy(newJsonWeatherData.toPath(), initialJsonWeatherData.toPath());
 
     }
 
@@ -147,7 +135,7 @@ public class AggregationServer {
                                 fullJsonData.append(inputLine).append("\n");
                                 if(inputLine.contains("}")){break;}
                             }
-                            save_data(fullJsonData.toString());
+                            save_data(fullJsonData.toString(), destinationFile);
                         }
                         catch(IOException e){ // catch IOException if there are issues saving data
                             send_acknowledgement("500 INTERNAL_SERVER_ERROR", "0", out); // send bad json acknowledgment
