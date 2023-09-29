@@ -71,7 +71,7 @@ public class ContentServer {
         String contentLength = Integer.toString(jsonWeatherData.getBytes().length);
 
         //creation of HTTP PUT Request to be sent to Aggregation Server
-        String httpPutRequest = "PUT /weather.json HTTP/1.1\nUser-Agent: ATOMClient/1/0\n";
+        String httpPutRequest = "PUT /weather.txt HTTP/1.1\nUser-Agent: ATOMClient/1/0\n";
         httpPutRequest = httpPutRequest + "Content-Type: " + contentType + "\n";
         httpPutRequest = httpPutRequest + "Content-Length: " + contentLength + "\n";
         httpPutRequest = httpPutRequest + jsonWeatherData;
