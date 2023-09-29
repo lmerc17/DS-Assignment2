@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.Scanner;
 
 public class AggregationServer {
 
@@ -25,17 +27,71 @@ public class AggregationServer {
 
     private static void save_data(String jsonData, String destinationFile) throws IOException{
 
-        // initialJsonWeatherData and newJsonWeatherData files are created.
-        File initialJsonWeatherData = new File("AggregationServer/weather_backup.json");
-        File newJsonWeatherData = new File("AggregationServer/" + destinationFile);
+        // initialJsonWeather Data and newJsonWeatherData files are created.
+        File jsonWeatherDataBackup = new File("AggregationServer/weather_backup.txt");
+        File initialJsonWeatherData = new File("AggregationServer/" + destinationFile);
+        File newJsonWeatherData = new File("AggregationServer/weather_temp.txt");
 
-        Files.copy(newJsonWeatherData.toPath(), initialJsonWeatherData.toPath());
+        if(jsonWeatherDataBackup.exists()){ // if weather_backup.txt exists
+            if(!newJsonWeatherData.delete()){ // delete it
+                System.err.println("weather_backup.txt cannot be deleted");
+                System.exit(1);
+            }
+        }
+        if(newJsonWeatherData.exists()){ // if weather_temp.txt exists
+            if(!newJsonWeatherData.delete()){ // delete it
+                System.err.println("weather_temp.txt cannot be deleted");
+                System.exit(1);
+            }
+        }
+
+        // copy initial json weather data into backup file
+        Files.copy(initialJsonWeatherData.toPath(), jsonWeatherDataBackup.toPath());
+
+        //create weather_temp file
+        if(!newJsonWeatherData.createNewFile()){
+            System.err.println("weather_temp.txt could not be created");
+            System.exit(1);
+        }
+
+        Scanner initialJson = new Scanner(initialJsonWeatherData);
+        PrintWriter newJson = new PrintWriter(newJsonWeatherData);
+        String id = jsonData.substring(jsonData.indexOf("\"id\"") + 7, jsonData.indexOf("\"name\"")-3);
+        String line;
+
+        while(initialJson.hasNextLine()){
+            line = initialJson.nextLine();
+            if(!line.contains(id)){
+                newJson.println(line);
+            }
+            else{
+                newJson.print(jsonData.substring(2));
+                while(!line.contains("}")){
+                    line = initialJson.nextLine();
+                }
+            }
+        }
+        newJson.close();
+        initialJson.close();
+
+        if(!initialJsonWeatherData.delete()){
+            System.err.println("Original weather.txt could not be deleted");
+            System.exit(1);
+        }
+        if(!newJsonWeatherData.renameTo(initialJsonWeatherData)){
+            System.err.println("Temp weather file wasn't renamed");
+            System.exit(1);
+        }
+        if(!jsonWeatherDataBackup.delete()){
+            System.err.println("weather_backup.txt could not be deleted");
+            System.exit(1);
+        }
 
     }
 
     private static void print_data(String requestedData, PrintWriter out) throws IOException{
 
-        BufferedReader data = new BufferedReader(new FileReader("AggregationServer/weather.json"));
+        BufferedReader data = new BufferedReader(new FileReader("AggregationServer/weather.txt"));
         String line;
         boolean dataFound = false;
 
@@ -49,6 +105,7 @@ public class AggregationServer {
             while((line = data.readLine()) != null){
                 if(line.contains(requestedData)){
                     dataFound = true;
+                    out.println(line);
                     while(((line = data.readLine()) != null) && !(line.trim().equals("}"))){
                         out.println(line);
                     }
@@ -65,6 +122,18 @@ public class AggregationServer {
     }
 
     public static void main(String[] args){
+
+        // initial code to check if backup file is present and overwriting weather.txt with it if so.
+        File jsonWeatherDataBackup = new File("AggregationServer/weather_backup.txt");
+        File initialJsonWeatherData = new File("AggregationServer/weather.txt");
+        if(jsonWeatherDataBackup.exists()){
+            try {
+                Files.copy(jsonWeatherDataBackup.toPath(), initialJsonWeatherData.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                System.err.println("Could not restore backup weather data");
+                System.exit(1);
+            }
+        }
 
         int port = 0;
 
