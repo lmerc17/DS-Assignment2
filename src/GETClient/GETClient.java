@@ -10,7 +10,11 @@ import java.util.regex.PatternSyntaxException;
 
 public class GETClient {
 
-    public static String parseJson(String JsonLine){ //method to parse the JSON formatting given by the aggregation server
+    /** Method to turn JSON formatting supplied by AggregationServer into readable format.
+    * @param  JsonLine: A string of data in Json form to be converted into a readable form.
+    * @return A string consisting of the converted JsonLine.
+    */
+    private static String parseJson(String JsonLine){
 
         JsonLine = JsonLine.trim(); //whitespace is trimmed from the input string.
         boolean colon = false; //boolean is used to ensure only the first colon (:) is given a space after it
@@ -79,6 +83,9 @@ public class GETClient {
             label:
             while((receivedLine = in.readLine()) != null) { //while receiving lines from the server
                 switch (receivedLine.trim()) { //trim the line
+                    case "No relevant ID data":
+                        System.out.println("There is no weather data stored for the supplied ID number");
+                        break label;
                     case "-1": //if it is -1, break the while loop
                         break label;
                     case "}", "{": //if it is { or }, print a new line (this is to separate different weather stations)

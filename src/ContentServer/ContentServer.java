@@ -7,7 +7,10 @@ import java.util.regex.PatternSyntaxException;
 import java.util.concurrent.TimeUnit;
 
 public class ContentServer {
-
+    /** Method to create JSON string from weather text format.
+     * @param  fileName: A string with the name of the file to convert to JSON format.
+     * @return A string consisting of the converted JsonLine.
+     */
     private static String createJSON(String fileName) throws IOException{
 
         //create the proper path for the fileName
@@ -42,6 +45,10 @@ public class ContentServer {
 
     }
 
+    /** Method to create PUT request to be sent to the AggregationServer.
+     * @param  jsonWeatherData: A string with the weather data in JSON format.
+     * @return A string containing the PUT request to be sent to the server.
+     */
     private static String createPUTRequest(String jsonWeatherData) {
         String contentType = "text/json";
         String contentLength = Integer.toString(jsonWeatherData.getBytes().length);
@@ -134,7 +141,12 @@ public class ContentServer {
                     counter++;
                 }
 
-                TimeUnit.SECONDS.sleep(25);
+                if(counter != 3) { //if the while loop exits due to successful acknowledgment and matching content_length
+                    TimeUnit.SECONDS.sleep(25); //run the timer
+                }
+                else{ //otherwise break the loop
+                    break;
+                }
 
             }
 
