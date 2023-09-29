@@ -91,8 +91,10 @@ public class GETClient {
                         break label;
                     case "-1": //if it is -1, break the while loop
                         break label;
-                    case "}", "{": //if it is { or }, print a new line (this is to separate different weather stations)
+                    case "}": //if it is }, print a new line (this is to separate different weather stations)
                         System.out.println("\n");
+                        break;
+                    case "{": //if it is {, do nothing
                         break;
                     default: //when no cases are matched, take the receivedLine and print the parsed version of it
                         System.out.println(parseJson(receivedLine));
