@@ -38,6 +38,7 @@ public class AggregationServer {
 
         BufferedReader data = new BufferedReader(new FileReader("AggregationServer/weather.json"));
         String line;
+        boolean dataFound = false;
 
         if(requestedData.equals("/")){
             while((line = data.readLine()) != null){
@@ -48,6 +49,7 @@ public class AggregationServer {
         else{
             while((line = data.readLine()) != null){
                 if(line.contains(requestedData)){
+                    dataFound = true;
                     while(((line = data.readLine()) != null) && !(line.trim().equals("}"))){
                         out.println(line);
                     }
@@ -55,6 +57,10 @@ public class AggregationServer {
                     out.println("-1");
                 }
             }
+        }
+
+        if(!dataFound){
+            out.println("No relevant ID data");
         }
         data.close();
     }
@@ -88,34 +94,66 @@ public class AggregationServer {
              BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))
         )
         {
-            System.out.println("Client connected on port " + port);
+            // defining strings for later use
             String inputLine;
             String requestedData;
             String destinationFile;
             String content_length;
-            while((inputLine = in.readLine()) != null){
+            while((inputLine = in.readLine()) != null){ // read in input
 
-                if(inputLine.startsWith("GET")){
+                if(inputLine.startsWith("GET")){ // if the input line starts with GET, data is being given to client
 
                     //delete GET and HTTP/1.1 from start and end of string to isolate requested Data
                     requestedData = (inputLine.substring(3, inputLine.length() - 9)).trim();
 
-                    print_data(requestedData, out);
+                    print_data(requestedData, out); //call print_data function to send data to client
 
                 }
-                else if(inputLine.startsWith("PUT")){
+                else if(inputLine.startsWith("PUT")){ //else if the input line starts with PUT, a content server wants to store data
 
                     System.out.println(inputLine);
+
+                    // Get the name of the file where the weather json data is being stored from the PUT request
                     destinationFile = (inputLine.substring(3, inputLine.length() - 9)).trim();
 
+                    // Cycle through the received lines until the content-length line has been read into inputLine
                     while((inputLine = in.readLine()) != null){
                         if(inputLine.startsWith("Content-Length")){break;}
                     }
 
+                    // Set content_length string to value in inputLine or to 0 if inputLine is null
                     content_length = inputLine != null ? inputLine.substring(16) : "0";
-                    send_acknowledgement("201 HTTP_CREATED", content_length, out);
+
+                    if(content_length.equals("0")){ // if content length is 0 (no content arrives)
+                        send_acknowledgement("204 NO_CONTENT", content_length, out); //send a 204 acknowledgment back to the content server
+                    }
+                    else { // otherwise (content length isn't 0)
+
+                        StringBuilder fullJsonData = new StringBuilder();
+
+                        try{ // try to save data
+                            while((inputLine = in.readLine()) != null) {
+                                fullJsonData.append(inputLine).append("\n");
+                                if(inputLine.contains("}")){break;}
+                            }
+                            save_data(fullJsonData.toString());
+                        }
+                        catch(IOException e){ // catch IOException if there are issues saving data
+                            send_acknowledgement("500 INTERNAL_SERVER_ERROR", "0", out); // send bad json acknowledgment
+                        }
+
+                        //if saving data succeeds and catch section isn't called, send acknowledgment 201 (will change later)
+                        send_acknowledgement("201 HTTP_CREATED", content_length, out); // add status 200 functionality
+
+                    }
 
 
+                }
+                else if(inputLine.isEmpty()){ //else if the input line received is empty, acknowledgment 204 is sent to content server
+                    send_acknowledgement("204 NO_CONTENT", "0", out);
+                }
+                else{ // else, send status 400 back to content server
+                    send_acknowledgement("400 BAD_REQUEST", "0", out);
                 }
 
             }
