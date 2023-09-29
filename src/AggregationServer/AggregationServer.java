@@ -99,8 +99,6 @@ public class AggregationServer {
 
                     //delete GET and HTTP/1.1 from start and end of string to isolate requested Data
                     requestedData = (inputLine.substring(3, inputLine.length() - 9)).trim();
-                    send_acknowledgement("200 OK", "0", out);
-                    System.out.println("Received message: " + inputLine + " from " + clientSocket);
 
                     print_data(requestedData, out);
 
