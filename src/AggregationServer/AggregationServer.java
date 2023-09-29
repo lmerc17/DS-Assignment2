@@ -27,10 +27,21 @@ public class AggregationServer {
         File intermediate = new File("AggregationServer/intermediate_weather.json");
 
         if(intermediate.exists()) {
-            intermediate.delete();
+            if(!intermediate.delete()){
+                System.err.println("Cannot delete intermediate weather storage file");
+                System.exit(1);
+            }
         }
 
-        intermediate.createNewFile();
+        if(!intermediate.createNewFile()){
+            System.err.println("Cannot create intermediate weather storage file");
+            System.exit(1);
+        }
+
+        try (FileWriter fw = new FileWriter("AggregationServer/intermediate_weather.json")) {
+            fw.write(jsonData);
+        }
+
 
     }
 
