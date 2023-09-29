@@ -8,11 +8,16 @@ import java.nio.file.StandardCopyOption;
 import java.util.Scanner;
 
 public class AggregationServer {
-
+    /** Method to send an acknowledgement back to the client.
+     * @param  status: The status to be returned to the client.
+     * @param content_length: The content_length given by the client in their request (if applicable).
+     * @param out: The PrintWriter associated with the client socket.
+     */
     private static void send_acknowledgement(String status, String content_length, PrintWriter out){
 
         String response;
 
+        //if content length is 0, the extra information in the acknowledgement isn't needed.
         if(content_length.equals("0")){
             response = "HTTP/1.1 " + status;
         }
@@ -20,11 +25,15 @@ public class AggregationServer {
             response = "HTTP/1.1 " + status + "\nContent-Type: text/json" + "\nContent-Length: " + content_length;
         }
 
-        out.println(response);
-        out.println("-1");
+        out.println(response); // send to client / content server
+        out.println("-1"); // send terminating character
 
     }
 
+    /** Method to save the jsonData to the weather files.
+     * @param  jsonData: A string containing all the jsonData sent by the content server.
+     * @param destinationFile: The path to the file where the weather data is stored.
+     */
     private static void save_data(String jsonData, String destinationFile) throws IOException{
 
         // initialJsonWeather Data and newJsonWeatherData files are created.
@@ -54,34 +63,38 @@ public class AggregationServer {
             System.exit(1);
         }
 
-        Scanner initialJson = new Scanner(initialJsonWeatherData);
-        PrintWriter newJson = new PrintWriter(newJsonWeatherData);
-        String id = jsonData.substring(jsonData.indexOf("\"id\"") + 7, jsonData.indexOf("\"name\"")-3);
+        Scanner initialJson = new Scanner(initialJsonWeatherData); // to read from the current weather file
+        PrintWriter newJson = new PrintWriter(newJsonWeatherData); // to write to the new weather file
+        String id = jsonData.substring(jsonData.indexOf("\"id\"") + 7, jsonData.indexOf("\"name\"")-4); // id of the data being added
+        System.out.println("THIS IS THE ID: " + id);
         String line;
 
-        while(initialJson.hasNextLine()){
-            line = initialJson.nextLine();
-            if(!line.contains(id)){
-                newJson.println(line);
+        while(initialJson.hasNextLine()){ // while there is still a line to be read in the current weather file
+            line = initialJson.nextLine(); // read the line
+            if(!line.contains(id)){ // if the line does not contain the id of the jsonData being added
+                newJson.println(line); // print that line to the new weather data file
             }
-            else{
-                newJson.print(jsonData.substring(2));
-                while(!line.contains("}")){
-                    line = initialJson.nextLine();
+            else{ // if the line does contain the id of the jsonData being added
+                newJson.print(jsonData.substring(2)); // add that jsonData to the new weather file (minus the starting curly bracket)
+                while(!line.contains("}")){ // while line does not contain the ending curly bracket
+                    line = initialJson.nextLine(); // progress through the lines
                 }
             }
         }
-        newJson.close();
-        initialJson.close();
+        newJson.close(); //close the PrintWriter
+        initialJson.close(); //close the scanner
 
+        // delete the initial weather data
         if(!initialJsonWeatherData.delete()){
             System.err.println("Original weather.txt could not be deleted");
             System.exit(1);
         }
+        // rename the new weather file to the same name as the initial one
         if(!newJsonWeatherData.renameTo(initialJsonWeatherData)){
             System.err.println("Temp weather file wasn't renamed");
             System.exit(1);
         }
+        // delete the backup weather file
         if(!jsonWeatherDataBackup.delete()){
             System.err.println("weather_backup.txt could not be deleted");
             System.exit(1);
@@ -89,32 +102,37 @@ public class AggregationServer {
 
     }
 
+    /** Method to print the jsonData requested by a GETClient.
+     * @param requestedData: A string containing the station ID for the data requested by the GETClient
+     * @param out: THe PrintWriter associated with the client socket.
+     */
     private static void print_data(String requestedData, PrintWriter out) throws IOException{
 
         BufferedReader data = new BufferedReader(new FileReader("AggregationServer/weather.txt"));
         String line;
         boolean dataFound = false;
 
-        if(requestedData.equals("/")){
-            while((line = data.readLine()) != null){
+        if(requestedData.equals("/")){ // if requested data is all stations
+            while((line = data.readLine()) != null){ // send the entire file to the client
                 out.println(line);
             }
-            out.println("-1");
+            out.println("-1"); // send terminating character
         }
-        else{
-            while((line = data.readLine()) != null){
-                if(line.contains(requestedData)){
-                    dataFound = true;
-                    out.println(line);
-                    while(((line = data.readLine()) != null) && !(line.trim().equals("}"))){
-                        out.println(line);
+        else{ // otherwise (if a specific station is requested)
+            while((line = data.readLine()) != null){ // read the lines of data
+                if(line.contains(requestedData)){ // if the line read contains the ID requested
+                    dataFound = true; // set dataFound flag to true
+                    out.println(line); // send the line that was found
+                    while(((line = data.readLine()) != null) && !(line.trim().equals("}"))){ // while there are lines to read and it has not yet reached the ending curly brace
+                        out.println(line); // send the line to the client
                     }
-                    out.println("}");
-                    out.println("-1");
+                    out.println("}"); // send the client the final curly brace
+                    out.println("-1"); // send the terminating character
                 }
             }
         }
 
+        // if the data was not found, send a message to the client
         if(!dataFound){
             out.println("No relevant ID data");
         }
@@ -129,6 +147,10 @@ public class AggregationServer {
         if(jsonWeatherDataBackup.exists()){
             try {
                 Files.copy(jsonWeatherDataBackup.toPath(), initialJsonWeatherData.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                if(!jsonWeatherDataBackup.delete()){
+                    System.err.println("Could not delete backup file after restoring backup");
+                    System.exit(1);
+                }
             } catch (IOException e) {
                 System.err.println("Could not restore backup weather data");
                 System.exit(1);
