@@ -211,7 +211,12 @@ public class AggregationServer {
                         }
 
                         //if saving data succeeds and catch section isn't called, send acknowledgment 201 (will change later)
-                        send_acknowledgement("201 HTTP_CREATED", content_length, out); // add status 200 functionality
+                        if(initialJsonWeatherData.exists()){
+                            send_acknowledgement("200 OK", content_length, out);
+                        }
+                        else {
+                            send_acknowledgement("201 HTTP_CREATED", content_length, out); // add status 200 functionality
+                        }
 
                     }
 
