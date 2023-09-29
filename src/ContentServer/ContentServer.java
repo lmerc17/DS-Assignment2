@@ -17,29 +17,46 @@ public class ContentServer {
         fileName = "ContentServer/" + fileName;
         System.out.println(fileName);
 
-        boolean colon;
-
         StringBuilder jsonData = new StringBuilder(); //create string builder for final jsonData
         BufferedReader weatherData = new BufferedReader(new FileReader(fileName)); //create buffered reader to read file
-        String line;
+        String line; // create string to take in lines from AggregationServer
+        String variable; // create string to take in the variable name from the weatherData
+        StringBuilder value; // create string to take value of variable from the weatherData
 
         jsonData.append("{\n"); //insert the original { with a new line
         while((line = weatherData.readLine()) != null){ //while there is still a weatherData line to read
-            colon = false;
             jsonData.append("\t\""); //add a tab and a " to the line
-            for(char c : line.toCharArray()) {
-                if(c == ':' && !colon){ //if the read character is a colon and this if statement hasn't been entered already for this line
-                    jsonData.append("\" : \""); //add " : " to the line
-                    colon = true; //set flag to true
-                }
-                else{
-                    jsonData.append(c); //otherwise append the character to the line as normal
-                }
+            variable = line.split(":")[0]; // assign the portion before the : in line to variable
+            value = new StringBuilder(line.split(":")[1]); // assign the portion after the : in line to value
+
+            //for loop to append any lost strings to value (this is for the case when there is more than one : in a line)
+            for(int i=2; i<line.split(":").length; i++){
+                value.append(":").append(line.split(":")[i]);
             }
-            jsonData.append("\",\n"); //once a line is complete add a final ", comma and newline
+
+            // append a comma, space, colon and another space onto the jsonData
+            jsonData.append(variable).append("\": ");
+
+            // try statement used to catch NumberFormatException, this is used to check if value contains letters or not
+            try{
+                Float.parseFloat(value.toString()); // parse value as a float (if this doesn't work the exception is caught)
+                if(variable.equals("local_date_time_full")){throw new NumberFormatException();} // to account for one-off case where an all number entry needs quotations
+                jsonData.append(value).append(",\n"); // append the float value and then a comma and newline to the jsonData.
+            }
+            catch(NumberFormatException e){ //for when the NumberFormatException is caught
+                jsonData.append("\"").append(value).append("\",\n"); // append a quotation, then the value, then a quotation, comma and newline.
+            }
+
         }
         jsonData.append("}"); //when the file is done add a final } symbol
         weatherData.close();
+
+        if(jsonData.toString().equals("{\n}")){ //if the string doesn't contain any entries/keywords, empty it
+            jsonData.delete(0,jsonData.length());
+        }
+        else{ // otherwise if it is full
+            jsonData.delete(jsonData.length()-3, jsonData.length()-2); // delete the comma on the penultimate line
+        }
 
         return jsonData.toString(); //return the new string of jsonData
 
@@ -134,7 +151,7 @@ public class ContentServer {
                     //code to receive acknowledgement from server
                     while((receivedLine = in.readLine()) != null) {
                         if(receivedLine.equals("-1")){break;}
-                        if(receivedLine.startsWith("HTTP/1.1")){status = receivedLine.substring(9,12);}
+                        if(receivedLine.startsWith("HTTP/1.1")){status = receivedLine.substring(9,12); System.out.println("status: " + status);}
                         if(receivedLine.startsWith("Content-Length")){content_length = Integer.parseInt(receivedLine.substring(16,19));}
                     }
 
