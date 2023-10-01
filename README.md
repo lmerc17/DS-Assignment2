@@ -6,7 +6,7 @@
 ### GETClient:
 The GETClient consists of two methods. A regular main method as well as a parseJson method. The parseJson method takes in a line of Json styled text and converts it into a readable format for the client to output.
 
-The main method's arguments currently take in a URL with hostname and port number info as well as a stationID. Within this project, the format of the URL is "[hostname]:[port number]". The ID is also assumed to be entered in full with the letters at the beginning. 
+The main method's arguments currently take in a URL with hostname and port number info as well as a stationID. Within this project, the format of the URL is "[hostname]:[port number]". The ID is also assumed to be entered in full, with the letters at the beginning. 
 
 The main method firstly organises the arguments into variables stationID, hostName and portNumber. Then it creates a socket connected to the Aggregation Server using the hostName and portNumber information. From there it creates a GET request and sends it to the server. Then it takes in the output from the server, converts it to a readable form and sends it to stdout line by line. If there is no data for the stationID supplied, the Aggregation Server will tell the GETClient who will then send a message to stdout before shutting down.
 
@@ -23,7 +23,6 @@ The main method organises the arguments into variables dataPath, hostName and po
 
 The GETClient arguments currently take in a URL with hostname and port number info as well as a stationID. Within this project, the format of the URL is "[hostname]:[port number]". Currently, there is an exception and an if statement in place to ensure that the URL is of the correct format. There is also an exception to ensure the port number is valid too.
 
-- Need to add exceptions to ensure stationID is of the correct format too
 - Need to talk about UnknownHostException and IOException
 
 ### ContentServer:
