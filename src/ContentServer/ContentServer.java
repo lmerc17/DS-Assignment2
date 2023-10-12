@@ -34,7 +34,7 @@ public class ContentServer {
             }
 
             // append a comma, space, colon and another space onto the jsonData
-            jsonData.append(variable).append("\": ");
+            jsonData.append(variable).append("\":");
 
             // try statement used to catch NumberFormatException, this is used to check if value contains letters or not
             try{
