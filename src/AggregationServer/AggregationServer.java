@@ -8,6 +8,68 @@ import java.nio.file.StandardCopyOption;
 import java.util.Scanner;
 
 public class AggregationServer {
+
+    public static void main(String[] args) throws IOException {
+
+        // initial code to check if backup file is present and overwriting weather.txt with it if so.
+        File jsonWeatherDataBackup = new File("AggregationServer/weather_backup.txt");
+        File initialJsonWeatherData = new File("AggregationServer/weather.txt");
+        if(jsonWeatherDataBackup.exists()){
+            try {
+                Files.copy(jsonWeatherDataBackup.toPath(), initialJsonWeatherData.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                if(!jsonWeatherDataBackup.delete()){
+                    System.err.println("Could not delete backup file after restoring backup");
+                    System.exit(1);
+                }
+            } catch (IOException e) {
+                System.err.println("Could not restore backup weather data");
+                System.exit(1);
+            }
+        }
+
+        int port = 0;
+
+        //if statement to set server port to 4567 if a port number is not present in the arguments
+        if(args.length < 1) {
+            port = 4567;
+        }
+        else if(args.length == 1){
+            try { // a try-catch statement to ensure the port number entered is valid
+                port = Integer.parseInt(args[0]);
+
+            } catch (NumberFormatException e) {
+                System.err.println("Please enter a valid port number");
+                System.exit(1);
+            }
+        }
+        else{
+            System.err.println("Usage: java AggregationServer <port number>");
+            System.exit(1);
+        }
+
+        ServerSocket serverSocket = new ServerSocket(port);
+
+        while(true) {
+
+            // a try-catch statement to ensure all socket operation runs smoothly
+            try (Socket clientSocket = serverSocket.accept();
+                 PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
+                 BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))
+            ) {
+
+                Thread t = new ClientHandler(clientSocket, in, out, initialJsonWeatherData);
+
+                t.start();
+
+            } catch (IOException e) {
+                System.out.println("Exception caught when trying to listen on port " + port + " or listening for a connection");
+                System.exit(1);
+            }
+        }
+    }
+}
+
+class ClientHandler extends Thread{
     /** Method to send an acknowledgement back to the client.
      * @param  status: The status to be returned to the client.
      * @param content_length: The content_length given by the client in their request (if applicable).
@@ -123,7 +185,7 @@ public class AggregationServer {
                 if(line.contains(requestedData)){ // if the line read contains the ID requested
                     dataFound = true; // set dataFound flag to true
                     out.println(line); // send the line that was found
-                    while(((line = data.readLine()) != null) && !(line.trim().equals("}"))){ // while there are lines to read and it has not yet reached the ending curly brace
+                    while(((line = data.readLine()) != null) && !(line.trim().equals("}"))){ // while there are lines to read, and it has not yet reached the ending curly brace
                         out.println(line); // send the line to the client
                     }
                     out.println("}"); // send the client the final curly brace
@@ -139,67 +201,38 @@ public class AggregationServer {
         data.close();
     }
 
-    public static void main(String[] args){
+    final Socket clientSocket;
+    final BufferedReader in;
+    final PrintWriter out;
 
-        // initial code to check if backup file is present and overwriting weather.txt with it if so.
-        File jsonWeatherDataBackup = new File("AggregationServer/weather_backup.txt");
-        File initialJsonWeatherData = new File("AggregationServer/weather.txt");
-        if(jsonWeatherDataBackup.exists()){
-            try {
-                Files.copy(jsonWeatherDataBackup.toPath(), initialJsonWeatherData.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                if(!jsonWeatherDataBackup.delete()){
-                    System.err.println("Could not delete backup file after restoring backup");
-                    System.exit(1);
-                }
-            } catch (IOException e) {
-                System.err.println("Could not restore backup weather data");
-                System.exit(1);
-            }
-        }
+    File initialJsonWeatherData;
 
-        int port = 0;
+    public ClientHandler(Socket s, BufferedReader in, PrintWriter out, File initialJsonWeatherData){
+        clientSocket = s;
+        this.in = in;
+        this.out = out;
+        this.initialJsonWeatherData = initialJsonWeatherData;
+    }
 
-        //if statement to set server port to 4567 if a port number is not present in the arguments
-        if(args.length < 1) {
-            port = 4567;
-        }
-        else if(args.length == 1){
-            try { // a try-catch statement to ensure the port number entered is valid
-                port = Integer.parseInt(args[0]);
+    @Override
+    public void run(){
 
-            } catch (NumberFormatException e) {
-                System.err.println("Please enter a valid port number");
-                System.exit(1);
-            }
-        }
-        else{
-            System.err.println("Usage: java AggregationServer <port number>");
-            System.exit(1);
-        }
-
-        // a try-catch statement to ensure all socket operation runs smoothly
-        try (ServerSocket serverSocket = new ServerSocket(port);
-             Socket clientSocket = serverSocket.accept();
-             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))
-        )
-        {
+        try {
             // defining strings for later use
             String inputLine;
             String requestedData;
             String destinationFile;
             String content_length;
-            while((inputLine = in.readLine()) != null){ // read in input
+            while ((inputLine = in.readLine()) != null) { // read in input
 
-                if(inputLine.startsWith("GET")){ // if the input line starts with GET, data is being given to client
+                if (inputLine.startsWith("GET")) { // if the input line starts with GET, data is being given to client
 
                     //delete GET and HTTP/1.1 from start and end of string to isolate requested Data
                     requestedData = (inputLine.substring(3, inputLine.length() - 9)).trim();
 
                     print_data(requestedData, out); //call print_data function to send data to client
 
-                }
-                else if(inputLine.startsWith("PUT")){ //else if the input line starts with PUT, a content server wants to store data
+                } else if (inputLine.startsWith("PUT")) { //else if the input line starts with PUT, a content server wants to store data
 
                     System.out.println(inputLine);
 
@@ -207,37 +240,38 @@ public class AggregationServer {
                     destinationFile = (inputLine.substring(3, inputLine.length() - 9)).trim();
 
                     // Cycle through the received lines until the content-length line has been read into inputLine
-                    while((inputLine = in.readLine()) != null){
-                        if(inputLine.startsWith("Content-Length")){break;}
+                    while ((inputLine = in.readLine()) != null) {
+                        if (inputLine.startsWith("Content-Length")) {
+                            break;
+                        }
                     }
 
                     // Set content_length string to value in inputLine or to 0 if inputLine is null
                     content_length = inputLine != null ? inputLine.substring(16) : "0";
 
-                    if(content_length.equals("0")){ // if content length is 0 (no content arrives)
+                    if (content_length.equals("0")) { // if content length is 0 (no content arrives)
                         send_acknowledgement("204 NO_CONTENT", content_length, out); //send a 204 acknowledgment back to the content server
-                    }
-                    else { // otherwise (content length isn't 0)
+                    } else { // otherwise (content length isn't 0)
 
                         StringBuilder fullJsonData = new StringBuilder();
                         String status;
 
                         //if initial file is there set status as 200 otherwise set it as 201
-                        if(initialJsonWeatherData.exists()){
+                        if (initialJsonWeatherData.exists()) {
                             status = "200 OK";
-                        }
-                        else{
+                        } else {
                             status = "201 HTTP_CREATED";
                         }
 
-                        try{ // try to save data
-                            while((inputLine = in.readLine()) != null) {
+                        try { // try to save data
+                            while ((inputLine = in.readLine()) != null) {
                                 fullJsonData.append(inputLine).append("\n");
-                                if(inputLine.contains("}")){break;}
+                                if (inputLine.contains("}")) {
+                                    break;
+                                }
                             }
                             save_data(fullJsonData.toString(), destinationFile);
-                        }
-                        catch(IOException e){ // catch IOException if there are issues saving data
+                        } catch (IOException e) { // catch IOException if there are issues saving data
                             send_acknowledgement("500 INTERNAL_SERVER_ERROR", "0", out); // send bad json acknowledgment
                         }
 
@@ -247,19 +281,19 @@ public class AggregationServer {
                     }
 
 
-                }
-                else if(inputLine.isEmpty()){ //else if the input line received is empty, acknowledgment 204 is sent to content server
+                } else if (inputLine.isEmpty()) { //else if the input line received is empty, acknowledgment 204 is sent to content server
                     send_acknowledgement("204 NO_CONTENT", "0", out);
-                }
-                else{ // else, send status 400 back to content server
+                } else { // else, send status 400 back to content server
                     send_acknowledgement("400 BAD_REQUEST", "0", out);
                 }
 
             }
         }
         catch(IOException e){
-            System.out.println("Exception caught when trying to listen on port " + port + " or listening for a connection");
+            System.err.println("IOException in ClientHandler");
             System.exit(1);
         }
+
     }
+
 }
