@@ -47,9 +47,10 @@ public class AggregationServer {
             System.exit(1);
         }
 
+        //server socket is created with port given above
         ServerSocket serverSocket = new ServerSocket(port);
 
-        while(true) {
+        while(true) { //infinite loop to allow server to accept multiple clients
 
             // a try-catch statement to ensure all socket operation runs smoothly
             try (Socket clientSocket = serverSocket.accept();
@@ -57,8 +58,10 @@ public class AggregationServer {
                  BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()))
             ) {
 
+                //a thread object is created to take in all the client information and location of initial weather data
                 Thread t = new ClientHandler(clientSocket, in, out, initialJsonWeatherData);
 
+                //thread is started
                 t.start();
 
             } catch (IOException e) {
@@ -166,7 +169,7 @@ class ClientHandler extends Thread{
 
     /** Method to print the jsonData requested by a GETClient.
      * @param requestedData: A string containing the station ID for the data requested by the GETClient
-     * @param out: THe PrintWriter associated with the client socket.
+     * @param out: The PrintWriter associated with the client socket.
      */
     private static void print_data(String requestedData, PrintWriter out) throws IOException{
 
@@ -207,6 +210,12 @@ class ClientHandler extends Thread{
 
     File initialJsonWeatherData;
 
+    /** Constructor for a client handler class
+     * @param s: The clientSocket
+     * @param in: The BufferedReader which is reading the GETClient information
+     * @param out: The PrintWriter which is sending information to the GETClient
+     * @param initialJsonWeatherData: The file where the weather data is stored
+     */
     public ClientHandler(Socket s, BufferedReader in, PrintWriter out, File initialJsonWeatherData){
         clientSocket = s;
         this.in = in;
@@ -214,6 +223,7 @@ class ClientHandler extends Thread{
         this.initialJsonWeatherData = initialJsonWeatherData;
     }
 
+    /** Run method for the thread ClientHandler object. */
     @Override
     public void run(){
 
