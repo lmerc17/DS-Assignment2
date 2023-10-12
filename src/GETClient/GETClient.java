@@ -14,7 +14,7 @@ public class GETClient {
     * @param  JsonLine: A string of data in Json form to be converted into a readable form.
     * @return A string consisting of the converted JsonLine.
     */
-    private static String parseJson(String JsonLine){
+    public static String parseJson(String JsonLine){
 
         JsonLine = JsonLine.trim(); //whitespace is trimmed from the input string.
         boolean colon = false; //boolean is used to ensure only the first colon (:) is given a space after it
@@ -57,7 +57,7 @@ public class GETClient {
         try{
             if(args[0].split(":").length != 2){ //if the first argument doesn't split into two components
                 System.err.println("Please enter correct url format: <hostname>:<port number>");
-                System.exit(1);
+                return;
             }
             hostName = args[0].split(":")[0];
             portNumber = Integer.parseInt(args[0].split(":")[1]);
