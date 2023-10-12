@@ -64,11 +64,11 @@ public class GETClient {
         }
         catch (PatternSyntaxException e){ //catch when there are issues in splitting the first argument
             System.err.println("Please enter correct url format: <hostname>:<port number>");
-            System.exit(1);
+            return;
         }
         catch (NumberFormatException e){ //catch when the port number is not valid
             System.err.println("Please enter a valid port number");
-            System.exit(1);
+            return;
         }
 
         // try and catch statement to create socket, writer and reader and ensure they act properly
@@ -104,11 +104,9 @@ public class GETClient {
         }
         catch(UnknownHostException e){ //Exception catching for unknown host
             System.err.println("Unknown host " + hostName);
-            System.exit(1);
         }
         catch(IOException e){ //Exception catching for IOException
             System.err.println("Couldn't get IO for connection to " + hostName);
-            System.exit(1);
         }
 
     }

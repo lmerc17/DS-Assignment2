@@ -11,7 +11,7 @@ public class ContentServer {
      * @param  fileName: A string with the name of the file to convert to JSON format.
      * @return A string consisting of the converted JsonLine.
      */
-    private static String createJSON(String fileName) throws IOException{
+    public static String createJSON(String fileName) throws IOException{
 
         //create the proper path for the fileName
         fileName = "ContentServer/" + fileName;
@@ -65,7 +65,7 @@ public class ContentServer {
      * @param  jsonWeatherData: A string with the weather data in JSON format.
      * @return A string containing the PUT request to be sent to the server.
      */
-    private static String createPUTRequest(String jsonWeatherData) {
+    public static String createPUTRequest(String jsonWeatherData) {
         String contentType = "text/json";
         String contentLength = Integer.toString(jsonWeatherData.getBytes().length);
 
@@ -85,7 +85,7 @@ public class ContentServer {
         // initial if statements to check the arguments and save the stationID
         if(args.length != 2){
             System.err.println("Usage: java ContentServer <url> <data file location>");
-            System.exit(1);
+            return;
         }
         else{
             dataPath = args[1];
@@ -95,7 +95,7 @@ public class ContentServer {
         try{
             if(args[0].split(":").length != 2){ //if the first argument doesn't split into two components
                 System.err.println("Please enter correct url format: <hostname>:<port number>");
-                System.exit(1);
+                return;
             }
             hostName = args[0].split(":")[0];
             portNumber = Integer.parseInt(args[0].split(":")[1]);
@@ -103,11 +103,11 @@ public class ContentServer {
         }
         catch (PatternSyntaxException e){ //catch when there are issues in splitting the first argument
             System.err.println("Please enter correct url format: <hostname>:<port number>");
-            System.exit(1);
+            return;
         }
         catch (NumberFormatException e){ //catch when the port number is not valid
             System.err.println("Please enter a valid port number");
-            System.exit(1);
+            return;
         }
 
         //try and catch statement to ensure the jsonWeatherData is created
@@ -117,7 +117,7 @@ public class ContentServer {
         }
         catch(IOException | ArrayIndexOutOfBoundsException e){
             System.err.println("Could not create JSON file from local weather data");
-            System.exit(1);
+            return;
         }
 
         // try and catch statement to create socket, writer and reader and ensure they act properly
@@ -170,15 +170,12 @@ public class ContentServer {
         }
         catch(UnknownHostException e){ //Exception catching for unknown host
             System.err.println("Unknown host " + hostName);
-            System.exit(1);
         }
         catch(IOException e){ //Exception catching for IOException
             System.err.println("Couldn't get IO for connection to " + hostName);
-            System.exit(1);
         }
         catch(InterruptedException e){ //Exception for interrupted exception
             System.err.println("Interrupted Exception");
-            System.exit(1);
         }
 
     }

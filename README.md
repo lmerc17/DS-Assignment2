@@ -94,5 +94,6 @@ The first try and catch statement in the server makes sure the backup weather fi
 When running the thread (and its methods), there is one main try and catch statement. This makes sure the threads run accordingly and also let the program know when a thread has disconnected. There is another used later to ensure the ID number of the data being saved is valid. Lastly, there is one to ensure the data has been saved properly. 
 
 ## Testing
+The testing process for this project was quite difficult. As the methods in this project made use of File, PrintWriter and other objects, it was difficult to pass them into functions for testing and receive results. Also, most of the methods were void because they were sending output directly to the outward socket which made it difficult to check what was being sent. 
 
-- Don't know if I'll need this
+A few unit tests were still performed though as well as a few exception tests. Unfortunately, for the exception tests, the text wouldn't match because it would run with CRLF line spacings and JUnit would only take in LF line spacings for some reason. So despite the expected and actual text being the same, it was still marked as wrong. 

@@ -20,11 +20,11 @@ public class AggregationServer {
                 Files.copy(jsonWeatherDataBackup.toPath(), initialJsonWeatherData.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 if(!jsonWeatherDataBackup.delete()){
                     System.err.println("Could not delete backup file after restoring backup");
-                    System.exit(1);
+                    return;
                 }
             } catch (IOException e) {
                 System.err.println("Could not restore backup weather data");
-                System.exit(1);
+                return;
             }
         }
 
@@ -40,12 +40,12 @@ public class AggregationServer {
 
             } catch (NumberFormatException e) {
                 System.err.println("Please enter a valid port number");
-                System.exit(1);
+                return;
             }
         }
         else{
             System.err.println("Usage: java AggregationServer <port number>");
-            System.exit(1);
+            return;
         }
 
         //server socket is created with port given above
@@ -67,7 +67,7 @@ public class AggregationServer {
 
             } catch (IOException e) {
                 System.out.println("Exception caught when trying to listen on port " + port + " or listening for a connection");
-                System.exit(1);
+                return;
             }
         }
     }
@@ -79,7 +79,7 @@ class ClientHandler extends Thread{
      * @param content_length: The content_length given by the client in their request (if applicable).
      * @param out: The PrintWriter associated with the client socket.
      */
-    private static void send_acknowledgement(String status, String content_length, PrintWriter out){
+    public static void send_acknowledgement(String status, String content_length, PrintWriter out){
 
         String response;
 
@@ -100,7 +100,7 @@ class ClientHandler extends Thread{
      * @param  jsonData: A string containing all the jsonData sent by the content server.
      * @param destinationFile: The path to the file where the weather data is stored.
      */
-    private static void save_data(String jsonData, String destinationFile) throws IOException{
+    public static void save_data(String jsonData, String destinationFile) throws IOException{
 
         // initialJsonWeather Data and newJsonWeatherData files are created.
         File jsonWeatherDataBackup = new File("AggregationServer/weather_backup.txt");
@@ -110,13 +110,13 @@ class ClientHandler extends Thread{
         if(jsonWeatherDataBackup.exists()){ // if weather_backup.txt exists
             if(!newJsonWeatherData.delete()){ // delete it
                 System.err.println("weather_backup.txt cannot be deleted");
-                System.exit(1);
+                return;
             }
         }
         if(newJsonWeatherData.exists()){ // if weather_temp.txt exists
             if(!newJsonWeatherData.delete()){ // delete it
                 System.err.println("weather_temp.txt cannot be deleted");
-                System.exit(1);
+                return;
             }
         }
 
@@ -126,7 +126,7 @@ class ClientHandler extends Thread{
         //create weather_temp file
         if(!newJsonWeatherData.createNewFile()){
             System.err.println("weather_temp.txt could not be created");
-            System.exit(1);
+            return;
         }
 
         Scanner initialJson = new Scanner(initialJsonWeatherData); // to read from the current weather file
@@ -160,17 +160,16 @@ class ClientHandler extends Thread{
         // delete the initial weather data
         if(!initialJsonWeatherData.delete()){
             System.err.println("Original weather.txt could not be deleted");
-            System.exit(1);
+            return;
         }
         // rename the new weather file to the same name as the initial one
         if(!newJsonWeatherData.renameTo(initialJsonWeatherData)){
             System.err.println("Temp weather file wasn't renamed");
-            System.exit(1);
+            return;
         }
         // delete the backup weather file
         if(!jsonWeatherDataBackup.delete()){
             System.err.println("weather_backup.txt could not be deleted");
-            System.exit(1);
         }
 
     }
@@ -179,7 +178,7 @@ class ClientHandler extends Thread{
      * @param  id: A string containing all the ID of the weather data to be deleted
      * @param destinationFile: The path to the file where the weather data is being deleted.
      */
-    private static void delete_data(String id, String destinationFile) throws IOException{
+    public static void delete_data(String id, String destinationFile) throws IOException{
 
         // initialJsonWeather Data and newJsonWeatherData files are created.
         File jsonWeatherDataBackup = new File("AggregationServer/weather_backup.txt");
@@ -189,13 +188,13 @@ class ClientHandler extends Thread{
         if(jsonWeatherDataBackup.exists()){ // if weather_backup.txt exists
             if(!newJsonWeatherData.delete()){ // delete it
                 System.err.println("weather_backup.txt cannot be deleted");
-                System.exit(1);
+                return;
             }
         }
         if(newJsonWeatherData.exists()){ // if weather_temp.txt exists
             if(!newJsonWeatherData.delete()){ // delete it
                 System.err.println("weather_temp.txt cannot be deleted");
-                System.exit(1);
+                return;
             }
         }
 
@@ -205,7 +204,7 @@ class ClientHandler extends Thread{
         //create weather_temp file
         if(!newJsonWeatherData.createNewFile()){
             System.err.println("weather_temp.txt could not be created");
-            System.exit(1);
+            return;
         }
 
         Scanner initialJson = new Scanner(initialJsonWeatherData); // to read from the current weather file
@@ -234,17 +233,16 @@ class ClientHandler extends Thread{
         // delete the initial weather data
         if(!initialJsonWeatherData.delete()){
             System.err.println("Original weather.txt could not be deleted");
-            System.exit(1);
+            return;
         }
         // rename the new weather file to the same name as the initial one
         if(!newJsonWeatherData.renameTo(initialJsonWeatherData)){
             System.err.println("Temp weather file wasn't renamed");
-            System.exit(1);
+            return;
         }
         // delete the backup weather file
         if(!jsonWeatherDataBackup.delete()){
             System.err.println("weather_backup.txt could not be deleted");
-            System.exit(1);
         }
 
     }
@@ -253,7 +251,7 @@ class ClientHandler extends Thread{
      * @param requestedData: A string containing the station ID for the data requested by the GETClient
      * @param out: The PrintWriter associated with the client socket.
      */
-    private static void print_data(String requestedData, PrintWriter out) throws IOException{
+    public static void print_data(String requestedData, PrintWriter out) throws IOException{
 
         BufferedReader data = new BufferedReader(new FileReader("AggregationServer/weather.txt"));
         String line;
