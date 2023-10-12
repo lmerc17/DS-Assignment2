@@ -417,13 +417,14 @@ class ClientHandler extends Thread{
         }
         catch(IOException e){
             if(fullJsonData != null && destinationFile != null) {
+                String jsonData = fullJsonData.toString();
+                String id = jsonData.substring(jsonData.indexOf("\"id\"") + 6, jsonData.indexOf("\"name\"") - 4); // id of the data being added
                 try {
                     TimeUnit.SECONDS.sleep(30); //run the timer
-                    String jsonData = fullJsonData.toString();
-                    String id = jsonData.substring(jsonData.indexOf("\"id\"") + 6, jsonData.indexOf("\"name\"") - 4); // id of the data being added
                     delete_data(id, destinationFile);
                 }
                 catch (InterruptedException | IOException ex) {
+                    System.err.println("Could not delete weather data from disconnected content server with ID: " + id);
                 }
 
             }
