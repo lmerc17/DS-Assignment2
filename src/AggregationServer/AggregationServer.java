@@ -374,10 +374,12 @@ class ClientHandler extends Thread{
                                 if (inputLine.contains("}")) { //if the input contains }, stop reading
                                     break;
                                 }
-                                else if (inputLine.contains("id")){ // if the input contains id:
+                                else if (inputLine.contains("\"id\"")){ // if the input contains id:
                                     if(inputLine.contains("IDS")) { // if the id contains IDS
+                                        System.out.println(inputLine);
                                         try { // try turning the ID after it into a number
-                                            Integer.parseInt(inputLine.substring(10, inputLine.length()-2));
+                                            int num = Integer.parseInt(inputLine.substring(10, inputLine.length()-2));
+                                            System.out.println(num);
                                         } catch (NumberFormatException e) { // if it is not a valid number, end the connection and stop the thread
                                             System.err.println("Invalid ID in Data received");
                                             clientSocket.close();
@@ -387,6 +389,7 @@ class ClientHandler extends Thread{
                                         }
                                     }
                                     else{ // if IDS isn't present, end the connection and stop the thread.
+                                        System.out.println(inputLine);
                                         System.err.println("Invalid ID in Data received");
                                         clientSocket.close();
                                         in.close();
