@@ -1,4 +1,4 @@
-all: compile clean
+all: compile
 
 compile: src/AggregationServer/AggregationServer.java src/ContentServer/ContentServer.java src/GETClient/GETClient.java
 	javac src/AggregationServer/AggregationServer.java
@@ -7,5 +7,6 @@ compile: src/AggregationServer/AggregationServer.java src/ContentServer/ContentS
 
 clean:
 	rm -f src/AggregationServer/AggregationServer.class
+	rm -f src/AggregationServer/ClientHandler.class
 	rm -f src/ContentServer/ContentServer.class
 	rm -f src/GETClient/GETClient.class

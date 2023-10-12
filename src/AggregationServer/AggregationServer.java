@@ -132,7 +132,6 @@ class ClientHandler extends Thread{
         Scanner initialJson = new Scanner(initialJsonWeatherData); // to read from the current weather file
         PrintWriter newJson = new PrintWriter(newJsonWeatherData); // to write to the new weather file
         String id = jsonData.substring(jsonData.indexOf("\"id\"") + 6, jsonData.indexOf("\"name\"")-4); // id of the data being added
-        System.out.println("THIS IS THE ID: " + id);
         String line;
         boolean dataAdded = false;
 
@@ -150,6 +149,7 @@ class ClientHandler extends Thread{
             }
         }
 
+        // if statement to print jsonData if the weather data file is empty (and none of the above conditions have been met)
         if(!dataAdded){
             newJson.print(jsonData);
         }
@@ -212,16 +212,14 @@ class ClientHandler extends Thread{
         PrintWriter newJson = new PrintWriter(newJsonWeatherData); // to write to the new weather file
         String line;
 
-        System.out.println(id);
-
         while(initialJson.hasNextLine()){ // while there is still a line to be read in the current weather file
             line = initialJson.nextLine(); // read the line
-            if(line.contains("id") && !line.contains(id)){
-                newJson.println("{");
-                newJson.println(line);
+            if(line.contains("id") && !line.contains(id)){ // if the line contains "id" and doesn't contain the ID of data being deleted
+                newJson.println("{"); // print { on a line
+                newJson.println(line); // print the read line on a line
             }
-            else if(!line.contains(id) && !line.contains("{")){
-                newJson.println(line);
+            else if(!line.contains(id) && !line.contains("{")){ // else if the line doesn't contain the ID of the data being collected or a {
+                newJson.println(line); // print the new line
             }
             else{ // if the line does contain the id of the jsonData being deleted
                 while(!line.contains("}") && initialJson.hasNextLine()){ // skip to the next }
@@ -232,17 +230,6 @@ class ClientHandler extends Thread{
 
         newJson.close(); //close the PrintWriter
         initialJson.close(); //close the scanner
-
-//        if(lineCount == 1){ // if only 1 ID was present in the file and it was deleted (there will be a leftover {)
-//            if(!newJsonWeatherData.delete()){ // to clear the newJsonWeatherFile, it will be deleted and created
-//                System.err.println("weather_backup.txt cannot be deleted");
-//                System.exit(1);
-//            }
-//            if(!newJsonWeatherData.createNewFile()){
-//                System.err.println("weather_backup.txt cannot be created");
-//                System.exit(1);
-//            }
-//        }
 
         // delete the initial weather data
         if(!initialJsonWeatherData.delete()){
@@ -299,6 +286,7 @@ class ClientHandler extends Thread{
         data.close();
     }
 
+    //define variables for ClientHandler Object
     final Socket clientSocket;
     final BufferedReader in;
     final PrintWriter out;
@@ -320,6 +308,7 @@ class ClientHandler extends Thread{
     @Override
     public void run(){
 
+        //defining strings for later use
         StringBuilder fullJsonData = null;
         String destinationFile = null;
 
@@ -338,8 +327,6 @@ class ClientHandler extends Thread{
                     print_data(requestedData, out); //call print_data function to send data to client
 
                 } else if (inputLine.startsWith("PUT")) { //else if the input line starts with PUT, a content server wants to store data
-
-                    System.out.println(inputLine);
 
                     // Get the name of the file where the weather json data is being stored from the PUT request
                     destinationFile = (inputLine.substring(3, inputLine.length() - 9)).trim();
@@ -376,10 +363,8 @@ class ClientHandler extends Thread{
                                 }
                                 else if (inputLine.contains("\"id\"")){ // if the input contains id:
                                     if(inputLine.contains("IDS")) { // if the id contains IDS
-                                        System.out.println(inputLine);
                                         try { // try turning the ID after it into a number
-                                            int num = Integer.parseInt(inputLine.substring(10, inputLine.length()-2));
-                                            System.out.println(num);
+                                            Integer.parseInt(inputLine.substring(10, inputLine.length()-2));
                                         } catch (NumberFormatException e) { // if it is not a valid number, end the connection and stop the thread
                                             System.err.println("Invalid ID in Data received");
                                             clientSocket.close();
@@ -389,7 +374,6 @@ class ClientHandler extends Thread{
                                         }
                                     }
                                     else{ // if IDS isn't present, end the connection and stop the thread.
-                                        System.out.println(inputLine);
                                         System.err.println("Invalid ID in Data received");
                                         clientSocket.close();
                                         in.close();
@@ -418,15 +402,15 @@ class ClientHandler extends Thread{
 
             }
         }
-        catch(IOException e){
-            if(fullJsonData != null && destinationFile != null) {
-                String jsonData = fullJsonData.toString();
-                String id = jsonData.substring(jsonData.indexOf("\"id\"") + 6, jsonData.indexOf("\"name\"") - 4); // id of the data being added
+        catch(IOException e){ // if the server loses connection with the client (GETClient or Content Server)
+            if(fullJsonData != null && destinationFile != null) { // if these two variables have been used (meaning Content Server has been used)
+                String jsonData = fullJsonData.toString(); //get the Json data
+                String id = jsonData.substring(jsonData.indexOf("\"id\"") + 6, jsonData.indexOf("\"name\"") - 4); // get the id of the data being deleted
                 try {
-                    TimeUnit.SECONDS.sleep(30); //run the timer
-                    delete_data(id, destinationFile);
+                    TimeUnit.SECONDS.sleep(30); //run a 30s timer
+                    delete_data(id, destinationFile); // call delete data function for specified id and weather data file
                 }
-                catch (InterruptedException | IOException ex) {
+                catch (InterruptedException | IOException ex) { // if the data couldn't be deleted, show an error message
                     System.err.println("Could not delete weather data from disconnected content server with ID: " + id);
                 }
 
