@@ -220,6 +220,15 @@ public class AggregationServer {
                     else { // otherwise (content length isn't 0)
 
                         StringBuilder fullJsonData = new StringBuilder();
+                        String status;
+
+                        //if initial file is there set status as 200 otherwise set it as 201
+                        if(initialJsonWeatherData.exists()){
+                            status = "200 OK";
+                        }
+                        else{
+                            status = "201 HTTP_CREATED";
+                        }
 
                         try{ // try to save data
                             while((inputLine = in.readLine()) != null) {
@@ -232,13 +241,8 @@ public class AggregationServer {
                             send_acknowledgement("500 INTERNAL_SERVER_ERROR", "0", out); // send bad json acknowledgment
                         }
 
-                        //if saving data succeeds and catch section isn't called, send acknowledgment 201 (will change later)
-                        if(initialJsonWeatherData.exists()){
-                            send_acknowledgement("200 OK", content_length, out);
-                        }
-                        else {
-                            send_acknowledgement("201 HTTP_CREATED", content_length, out); // add status 200 functionality
-                        }
+                        //if data is saved and catch statement isn't entered, send acknowledgement
+                        send_acknowledgement(status, content_length, out);
 
                     }
 
